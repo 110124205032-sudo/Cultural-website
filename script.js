@@ -485,7 +485,8 @@ document.getElementById("registration-form").addEventListener("submit", function
 
     formData.set("event", selected.join(", "));
 
-    fetch("https://script.google.com/macros/s/AKfycbwLAREDeHhc99UVZEscZNwaRt0LAcfpK59edp9ciaknByt2ykF1hMm-QEBphkBGjAohbg/exec", {
+    // fetch("https://script.google.com/macros/s/AKfycbwLAREDeHhc99UVZEscZNwaRt0LAcfpK59edp9ciaknByt2ykF1hMm-QEBphkBGjAohbg/exec", {
+    fetch("https://script.google.com/macros/s/AKfycbyXCiEUl_soBviriSpGKlDtrYtBesotcPoeHUlFlWFQrPMeYFyUnw_fL4zPHv9CztQq/exec", {
         method: "POST",
         body: formData
     })
@@ -666,57 +667,47 @@ const eventTimes = {
     "Kutty Story": "10AM",
     "Photography": "11AM",
     "Illogical Marketing": "11AM",
-    "Solo Dance": "12PM",
-    "Solo Singing": "12PM",
-    "Group Dance": "1PM",
+    "Shipwreck": "12PM",
+    "Sudoku": "12PM",
+    "Form from Waste": "1PM",
     "Mime": "1PM"
 };
 
 
 
-const select = document.getElementById("event");
+document.addEventListener("DOMContentLoaded", function () {
 
-let lastSelected = [];
+    const select = document.getElementById("event");
 
-select.addEventListener("change", function() {
+    // 🔥 get existing Tom Select instance
+    const tom = select.tomselect;
 
-    const currentSelected = Array.from(this.selectedOptions).map(opt => opt.value);
+    tom.on("item_add", function(value) {
 
-    // find newly added item
-    const newItem = currentSelected.find(item => !lastSelected.includes(item));
+        const selected = tom.getValue();
+        const newTime = eventTimes[value];
 
-    if (!newItem) {
-        lastSelected = currentSelected;
-        return;
-    }
+        const conflict = selected.some(item =>
+            item !== value && eventTimes[item] === newTime
+        );
 
-    const newTime = eventTimes[newItem];
+        if (conflict) {
+            showConflictPopup(value);
 
-    // check conflict with already selected items
-    const hasConflict = lastSelected.some(item => eventTimes[item] === newTime);
+            // 🔥 REMOVE CONFLICT ITEM
+            setTimeout(() => {
+                tom.removeItem(value);
+            }, 0);
+        }
+    });
 
-    if (hasConflict) {
-        showConflictPopup(newItem);
-
-        // remove only conflicting event
-        Array.from(this.options).forEach(opt => {
-            if (opt.value === newItem) {
-                opt.selected = false;
-            }
-        });
-    } else {
-        lastSelected = currentSelected;
-    }
 });
-
-
-
 
 
 
 function showConflictPopup(eventName) {
     document.getElementById("conflict-text").innerText =
-        eventName + " conflicts with another selected event.";
+        eventName + " has a time clash with another event.";
 
     document.getElementById("conflict-popup").style.display = "flex";
 }
